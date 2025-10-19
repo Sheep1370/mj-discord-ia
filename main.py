@@ -74,7 +74,7 @@ async def on_message(message):
                         # Les morceaux suivants sont envoyés sans mention, dans le même canal
                         await message.channel.send(chunk)
                 
-                await message.reply(response)
+                #await message.reply(response)
             except Exception as e:
                 print(f"Erreur lors de l'appel à Gemini: {e}")
                 await message.reply(
