@@ -63,6 +63,7 @@ async def on_message(message):
 
                 #if len(response) > 2000:
                    # response = response[:1997] + "..."
+                message_chunks = split_message(response)
                 first_chunk = True
                 for chunk in message_chunks:
                     if first_chunk:
