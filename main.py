@@ -4,6 +4,7 @@ import os
 from gemini import chat_with_gemini
 from flask import Flask
 from threading import Thread
+import textwrap
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -12,6 +13,22 @@ intents.messages = True
 bot = commands.Bot(command_prefix='!', intents=intents, help_command=None)
 
 app = Flask('')
+
+# --- Nouvelle fonction de découpage ---
+def split_message(content, max_length=1950):
+    """
+    Découpe une longue chaîne de caractères en plusieurs morceaux 
+    compatibles avec la limite Discord. On utilise 1950 pour laisser une marge.
+    """
+    # Découpe le contenu en chunks (morceaux)
+    chunks = textwrap.wrap(content, max_length, break_long_words=False, replace_whitespace=False)
+    
+    # Si le découpage standard ne fonctionne pas bien, on utilise un découpage simple
+    if not chunks:
+        return [content[i:i + max_length] for i in range(0, len(content), max_length)]
+
+    return chunks
+# --- Fin de la nouvelle fonction ---
 
 @app.route('/')
 def home():
@@ -44,9 +61,18 @@ async def on_message(message):
             try:
                 response = chat_with_gemini(message.content)
 
-                if len(response) > 2000:
-                    response = response[:1997] + "..."
-
+                #if len(response) > 2000:
+                   # response = response[:1997] + "..."
+                first_chunk = True
+                for chunk in message_chunks:
+                    if first_chunk:
+                        # Le premier morceau utilise 'message.reply' pour mentionner l'utilisateur
+                        await message.reply(chunk)
+                        first_chunk = False
+                    else:
+                        # Les morceaux suivants sont envoyés sans mention, dans le même canal
+                        await message.channel.send(chunk)
+                
                 await message.reply(response)
             except Exception as e:
                 print(f"Erreur lors de l'appel à Gemini: {e}")
